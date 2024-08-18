@@ -115,7 +115,7 @@ jobs:
           fi
 
           # SSH into EC2 instance and deploy
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ubuntu@${SERVER_DNS} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ec2-user@${SERVER_DNS} << 'EOF'
             cd ${DEPLOY_PATH}
             git fetch origin
             git reset --hard origin/${BRANCH_NAME}
