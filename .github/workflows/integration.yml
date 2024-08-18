@@ -114,9 +114,9 @@ jobs:
             DEPLOY_PATH="${DEPLOY_PATH_PROD}"
           fi
 
-          mkdir -p /home/ec2-user/.ssh
+          sudo mkdir -p /home/ec2-user/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > /home/ec2-user/.ssh/github_actions_key
-          chmod 600 /home/ec2-user/.ssh/github_actions_key
+          sudo chmod 600 /home/ec2-user/.ssh/github_actions_key
 
           # Check if the host is already in known_hosts
           if ! ssh-keygen -F "${SERVER_DNS}" > /dev/null; then
