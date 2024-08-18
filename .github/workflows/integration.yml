@@ -120,7 +120,7 @@ jobs:
 
           # Check if the host is already in known_hosts
           if ! ssh-keygen -F "${SERVER_DNS}" > /dev/null; then
-            ssh-keyscan -H "${SERVER_DNS}" >> ~/.ssh/known_hosts
+            ssh-keyscan -H "${SERVER_DNS}" >> /home/ec2-user/.ssh/known_hosts
           else
             echo "Host key already in known_hosts."
           fi
