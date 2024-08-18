@@ -114,9 +114,9 @@ jobs:
             DEPLOY_PATH="${DEPLOY_PATH_PROD}"
           fi
 
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/github_actions_key
-          chmod 600 ~/.ssh/github_actions_key
+          mkdir -p /home/ec2-user/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > /home/ec2-user/.ssh/github_actions_key
+          chmod 600 /home/ec2-user/.ssh/github_actions_key
 
           # Check if the host is already in known_hosts
           if ! ssh-keygen -F "${SERVER_DNS}" > /dev/null; then
@@ -126,7 +126,7 @@ jobs:
           fi
 
           # SSH into EC2 instance and deploy
-          ssh -i ~/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
+          ssh -i /home/ec2-user/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
             set -e
             cd ${DEPLOY_PATH}
             git fetch origin
