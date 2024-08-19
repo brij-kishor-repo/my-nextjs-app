@@ -88,7 +88,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "ap-south-1"
-          BRANCH_NAME: ${{ github.ref_name }}
           EC2_DEV_DNS: ${{ secrets.EC2_DEV_DNS }}
           EC2_QA_DNS: ${{ secrets.EC2_QA_DNS }}
           EC2_STAGE_DNS: ${{ secrets.EC2_STAGE_DNS }}
@@ -99,6 +98,9 @@ jobs:
           DEPLOY_PATH_PROD: "/var/www"
 
         run: |
+          # Extract the branch name from github.ref
+          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
+          
           echo "Current branch: ${BRANCH_NAME}"
 
           # Determine branch and set corresponding DNS and deploy path
