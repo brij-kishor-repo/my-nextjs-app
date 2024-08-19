@@ -153,7 +153,7 @@ jobs:
             echo "Host key already in known_hosts."
           fi
 
-          ssh -i ~/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
+          sudo ssh -i ~/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
             set -ex
             cd ${DEPLOY_PATH}
             git fetch origin
