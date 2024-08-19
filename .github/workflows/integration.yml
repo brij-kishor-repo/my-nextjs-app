@@ -99,6 +99,7 @@ jobs:
           DEPLOY_PATH_PROD: "/var/www"
 
         run: |
+
           # Determine branch and set corresponding DNS and deploy path
           if [ "${BRANCH_NAME}" == "dev" ]; then
             SERVER_DNS="${EC2_DEV_DNS}"
@@ -112,23 +113,25 @@ jobs:
           elif [ "${BRANCH_NAME}" == "main" ]; then
             SERVER_DNS="${EC2_PROD_DNS}"
             DEPLOY_PATH="${DEPLOY_PATH_PROD}"
+          else
+            echo "Branch name not recognized. Exiting."
+            exit 1
           fi
 
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/github_actions_key
-          chmod 600 ~/.ssh/github_actions_key
+          sudo mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" | sudo tee ~/.ssh/github_actions_key > /dev/null
+          sudo chmod 600 ~/.ssh/github_actions_key
 
           # Ensure known_hosts file exists
-          touch ~/.ssh/known_hosts
+          sudo touch ~/.ssh/known_hosts
 
           # Check if the host is already in known_hosts
           if ! ssh-keygen -F "${SERVER_DNS}" > /dev/null; then
-            ssh-keyscan -H "${SERVER_DNS}" >> ~/.ssh/known_hosts
+            sudo ssh-keyscan -H "${SERVER_DNS}" | sudo tee -a ~/.ssh/known_hosts > /dev/null
           else
             echo "Host key already in known_hosts."
           fi
 
-          # SSH into EC2 instance and deploy
           ssh -i ~/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
             set -ex
             cd ${DEPLOY_PATH}
