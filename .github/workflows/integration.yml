@@ -98,8 +98,15 @@ jobs:
           DEPLOY_PATH_PROD: "/var/www"
 
         run: |
-          # Extract the branch name from github.ref
-          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
+          # Extract the branch name based on the reference type
+          if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
+            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          elif [[ "${GITHUB_REF}" == refs/pull/* ]]; then
+            BRANCH_NAME="${GITHUB_HEAD_REF}"
+          else
+            echo "Branch name not recognized. Exiting."
+            exit 1
+          fi
           
           echo "Current branch: ${BRANCH_NAME}"
 
