@@ -99,24 +99,31 @@ jobs:
           DEPLOY_PATH_PROD: "/var/www"
 
         run: |
+          echo "Current branch: ${BRANCH_NAME}"
 
           # Determine branch and set corresponding DNS and deploy path
-          if [ "${BRANCH_NAME}" == "dev" ]; then
-            SERVER_DNS="${EC2_DEV_DNS}"
-            DEPLOY_PATH="${DEPLOY_PATH_DEV}"
-          elif [ "${BRANCH_NAME}" == "qa" ]; then
-            SERVER_DNS="${EC2_QA_DNS}"
-            DEPLOY_PATH="${DEPLOY_PATH_QA}"
-          elif [ "${BRANCH_NAME}" == "uat" ]; then
-            SERVER_DNS="${EC2_STAGE_DNS}"
-            DEPLOY_PATH="${DEPLOY_PATH_STAGE}"
-          elif [ "${BRANCH_NAME}" == "main" ]; then
-            SERVER_DNS="${EC2_PROD_DNS}"
-            DEPLOY_PATH="${DEPLOY_PATH_PROD}"
-          else
-            echo "Branch name not recognized. Exiting."
-            exit 1
-          fi
+          case "${BRANCH_NAME}" in
+            "dev")
+              SERVER_DNS="${EC2_DEV_DNS}"
+              DEPLOY_PATH="${DEPLOY_PATH_DEV}"
+              ;;
+            "qa")
+              SERVER_DNS="${EC2_QA_DNS}"
+              DEPLOY_PATH="${DEPLOY_PATH_QA}"
+              ;;
+            "uat")
+              SERVER_DNS="${EC2_STAGE_DNS}"
+              DEPLOY_PATH="${DEPLOY_PATH_STAGE}"
+              ;;
+            "main")
+              SERVER_DNS="${EC2_PROD_DNS}"
+              DEPLOY_PATH="${DEPLOY_PATH_PROD}"
+              ;;
+            *)
+              echo "Branch name not recognized. Exiting."
+              exit 1
+              ;;
+          esac
 
           sudo mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" | sudo tee ~/.ssh/github_actions_key > /dev/null
