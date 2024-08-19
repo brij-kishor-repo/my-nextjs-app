@@ -120,7 +120,7 @@ jobs:
 
           # Ensure known_hosts file exists
           touch ~/.ssh/known_hosts
-          
+
           # Check if the host is already in known_hosts
           if ! ssh-keygen -F "${SERVER_DNS}" > /dev/null; then
             ssh-keyscan -H "${SERVER_DNS}" >> ~/.ssh/known_hosts
@@ -130,7 +130,7 @@ jobs:
 
           # SSH into EC2 instance and deploy
           ssh -i ~/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
-            set -e
+            set -ex
             cd ${DEPLOY_PATH}
             git fetch origin
             git reset --hard origin/${BRANCH_NAME}
