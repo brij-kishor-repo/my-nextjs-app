@@ -88,6 +88,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "ap-south-1"
+          EC2_DEV_DNS_GITHUB: ${{ secrets.EC2_DEV_DNS }}
           EC2_DEV_DNS: 15.207.23.157 # ${{ secrets.EC2_DEV_DNS }}
           EC2_QA_DNS: 15.207.23.157 # ${{ secrets.EC2_QA_DNS }}
           EC2_STAGE_DNS: ${{ secrets.EC2_STAGE_DNS }}
@@ -137,7 +138,9 @@ jobs:
           esac
 
           echo "Resolved server DNS: ${SERVER_DNS}"
+          echo "EC2_DEV_DNS_GITHUB server DNS: ${{ secrets.EC2_DEV_DNS_GITHUB }}"
           echo "Deployment path: ${DEPLOY_PATH}"
+          echo "SSH Key: ${{ secrets.EC2_SSH_KEY }}"
 
           sudo mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" | sudo tee ~/.ssh/github_actions_key > /dev/null
