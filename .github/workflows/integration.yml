@@ -15,65 +15,8 @@ on:
       - main
 
 jobs:
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: "20"
-
-  #     - name: Install dependencies
-  #       run: npm ci
-
-  #     - name: Run ESLint
-  #       run: npm run lint
-
-  # build:
-  #   runs-on: ubuntu-latest
-  #   needs: lint
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: "20"
-
-  #     - name: Install dependencies
-  #       run: npm ci
-
-  #     - name: Build project
-  #       run: npm run build
-
-  # test:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: "20"
-
-  #     - name: Install dependencies
-  #       run: npm ci
-
-  #     - name: Run tests
-  #       run: npm test
-
-  deploy:
+  lint:
     runs-on: ubuntu-latest
-    # needs: test
-    environment: dev # Reference the 'dev' environment
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -83,84 +26,46 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Deploy to EC2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "ap-south-1"
-          EC2_DEV_DNS: ${{ secrets.EC2_DEV_DNS }}
-          EC2_QA_DNS: ${{ secrets.EC2_QA_DNS }}
-          EC2_STAGE_DNS: ${{ secrets.EC2_STAGE_DNS }}
-          EC2_PROD_DNS: ${{ secrets.EC2_PROD_DNS }}
-          DEPLOY_PATH_DEV: "/var/www/dev"
-          DEPLOY_PATH_QA: "/var/www/qa"
-          DEPLOY_PATH_STAGE: "/var/www"
-          DEPLOY_PATH_PROD: "/var/www"
+      - name: Install dependencies
+        run: npm ci
 
-        run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            # Pull request event: Use the target branch of the pull request
-            BRANCH_NAME="${GITHUB_BASE_REF}"
-          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-            # Push event: Use the branch that received the push
-            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          else
-            echo "Branch name not recognized. Exiting."
-            exit 1
-          fi
+      - name: Run ESLint
+        run: npm run lint
 
-          echo "Current branch: ${BRANCH_NAME}"
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
 
-          # Determine branch and set corresponding DNS and deploy path
-          case "${BRANCH_NAME}" in
-            "dev")
-              SERVER_DNS="${EC2_DEV_DNS}"
-              DEPLOY_PATH="${DEPLOY_PATH_DEV}"
-              ;;
-            "qa")
-              SERVER_DNS="${EC2_QA_DNS}"
-              DEPLOY_PATH="${DEPLOY_PATH_QA}"
-              ;;
-            "uat")
-              SERVER_DNS="${EC2_STAGE_DNS}"
-              DEPLOY_PATH="${DEPLOY_PATH_STAGE}"
-              ;;
-            "main")
-              SERVER_DNS="${EC2_PROD_DNS}"
-              DEPLOY_PATH="${DEPLOY_PATH_PROD}"
-              ;;
-            *)
-              echo "Branch name ${BRANCH_NAME} not recognized. Defaulting to dev environment."
-              SERVER_DNS="${EC2_DEV_DNS}"
-              DEPLOY_PATH="${DEPLOY_PATH_DEV}"
-              ;;
-          esac
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-          echo "Resolved server DNS: ${SERVER_DNS}"
-          echo "EC2_DEV_DNS server DNS: ${{ secrets.EC2_DEV_DNS }}"
-          echo "Deployment path: ${DEPLOY_PATH}"
-          echo "SSH Key: ${{ secrets.EC2_SSH_KEY }}"
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
-          sudo mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | sudo tee ~/.ssh/github_actions_key > /dev/null
-          sudo chmod 600 ~/.ssh/github_actions_key
+      - name: Install dependencies
+        run: npm ci
 
-          # Ensure known_hosts file exists
-          sudo touch ~/.ssh/known_hosts
+      - name: Build project
+        run: npm run build
 
-          # Check if the host is already in known_hosts
-          if ! ssh-keygen -F "${SERVER_DNS}" > /dev/null; then
-            sudo ssh-keyscan -H "${SERVER_DNS}" | sudo tee -a ~/.ssh/known_hosts > /dev/null
-          else
-            echo "Host key already in known_hosts."
-          fi
+  test:
+    runs-on: ubuntu-latest
+    needs: build
 
-          sudo ssh -i ~/.ssh/github_actions_key ec2-user@${SERVER_DNS} << EOF
-            set -ex
-            cd ${DEPLOY_PATH}
-            git fetch origin
-            git reset --hard origin/${BRANCH_NAME}
-            npm ci --production
-            npm run build
-            pm2 restart nextjs-app-${BRANCH_NAME} || pm2 start npm --name "nextjs-app-${BRANCH_NAME}" -- start
-          EOF
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
