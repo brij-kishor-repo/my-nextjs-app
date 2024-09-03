@@ -1,48 +1,71 @@
-name: Github actions Integration
+name: CI/CD Pipeline for NextJs App
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - dev
+      - qa
+      - uat
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - dev
+      - qa
+      - uat
+      - main
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
+    needs: lint
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - name: "Installing Dependencies"
-        run: npm i
+          node-version: "20"
 
-      - name: "Build command"
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
         run: npm run build
 
-  unit-tests:
+  test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
+    needs: build
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - name: "Installing Dependencies"
-        run: npm i
+          node-version: "20"
 
-      - name: "Running test cases"
-        run: npm run test
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
